@@ -61,6 +61,31 @@ flowchart LR
 - **GatewaySubnet** kept free, so adding VPN or ExpressRoute does not mean
   re-addressing the hub.
 
+## Landing zones
+
+[`modules/landing-zone`](terraform/modules/landing-zone) is subscription
+vending: one module call gives a team a ready subscription.
+
+| | corp | online | sandbox |
+|---|---|---|---|
+| Management group | alz-corp | alz-online | alz-sandbox |
+| Hub peering (both ways) | yes | yes | no |
+| DNS through the hub | yes | yes | no |
+| 0.0.0.0/0 to the firewall | yes | no, own egress | no |
+| Firewall rule group for its FQDNs | yes | no | no |
+
+Every landing zone also gets its activity log in the central workspace, a
+monthly budget with 80% actual and 100% forecast alerts, and the owning Entra
+group as Contributor. The subscription is either existing or created from a
+billing scope through a subscription alias.
+
+It is written with `azapi`, so one provider reaches any subscription by
+resource ID: a new landing zone needs no new provider block. Peerings and
+firewall rule groups take a lock on the hub VNet and firewall policy, because
+Azure rejects concurrent changes to them. The VNet ignores changes to
+`subnets`, which belong to the team, with the NSG and route table vending
+creates for them.
+
 ## Management
 
 - One Log Analytics workspace in the management subscription for platform
@@ -108,6 +133,7 @@ terraform/
     hub-network/        hub VNet, Azure Firewall and policy, Bastion (+ tests)
     private-dns/        central privatelink zones, DNS Private Resolver, forwarding (+ tests)
     management/         central Log Analytics workspace, platform action group (+ tests)
+    landing-zone/       subscription vending with azapi: placement, spoke, peering, routes, budget (+ tests)
   envs/platform/        composition for the whole tenant (+ tests)
 ```
 
