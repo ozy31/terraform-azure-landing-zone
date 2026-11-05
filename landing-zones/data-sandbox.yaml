@@ -1,0 +1,10 @@
+# Data science experiments. Not connected; created from the billing account.
+archetype: sandbox
+billingScopeId: /providers/Microsoft.Billing/billingAccounts/1234567/enrollmentAccounts/7654321
+workload: DevTest
+addressSpace: 10.200.0.0/24
+ownerGroupId: 0c9d8e7f-6a5b-4c3d-2e1f-0a9b8c7d6e5f
+costCenter: CC-3050
+budget:
+  amount: 500
+  contacts: [data-science@example.co.uk]

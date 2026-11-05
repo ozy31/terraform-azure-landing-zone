@@ -28,6 +28,18 @@ output "log_analytics_workspace_id" {
   value       = module.management.log_analytics_workspace_id
 }
 
+output "landing_zones" {
+  description = "Per landing zone: subscription, VNet, and the NSG and route table to attach to its subnets."
+  value = {
+    for k, lz in module.landing_zone : k => {
+      subscription_id = lz.subscription_id
+      vnet_id         = lz.vnet_id
+      nsg_id          = lz.nsg_id
+      route_table_id  = lz.route_table_id
+    }
+  }
+}
+
 output "policy_assignment_ids" {
   description = "Policy assignment IDs, for exemptions."
   value       = module.policy.assignment_ids

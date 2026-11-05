@@ -5,7 +5,7 @@ TF      ?= terraform
 TF_DIRS := $(sort $(dir $(wildcard terraform/modules/*/main.tf terraform/envs/*/main.tf)))
 TF_TEST := $(sort $(patsubst %/tests/,%,$(dir $(wildcard terraform/*/*/tests/*.tftest.hcl))))
 
-.PHONY: help terraform tftest tflint lint security check clean
+.PHONY: help terraform tftest tflint landing-zones lint security check clean
 
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z_-]+:.*## / {printf "  \033[36m%-10s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -32,13 +32,16 @@ tflint: ## tflint with the azurerm ruleset
 		tflint --chdir=$$d --config=$(CURDIR)/.tflint.hcl; \
 	done
 
+landing-zones: ## Address overlaps and firewall priorities across landing-zones/*.yaml
+	python3 hack/check-landing-zones.py
+
 lint: ## yamllint
 	yamllint -s .
 
 security: ## trivy config scan (HIGH/CRITICAL)
 	trivy config --severity HIGH,CRITICAL --exit-code 1 --skip-dirs '**/.terraform' .
 
-check: terraform tftest lint ## Everything CI runs (except tflint and trivy)
+check: terraform tftest landing-zones lint ## Everything CI runs (except tflint and trivy)
 
 clean: ## Remove Terraform caches
 	find terraform -type d -name .terraform -prune -exec rm -rf {} +

@@ -1,0 +1,11 @@
+# The shared Kubernetes platform (github.com/ozy31/terraform-azure-aks-platform).
+# Online: public ingress through its own load balancer, egress through its own
+# NAT gateway, peered to the hub for private endpoints and on-premises.
+archetype: online
+subscriptionId: 66666666-6666-6666-6666-666666666666
+addressSpace: 10.40.0.0/16
+ownerGroupId: 7a3e5c21-9b4d-4f6a-8e2c-1d0b9a8f7e65
+costCenter: CC-0001
+budget:
+  amount: 25000
+  contacts: [platform-team@example.co.uk, finops@example.co.uk]

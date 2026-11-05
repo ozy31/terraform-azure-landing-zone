@@ -1,0 +1,13 @@
+# Card payments API. Private: reached through the hub, egress only to the PSPs.
+archetype: corp
+subscriptionId: 44444444-4444-4444-4444-444444444444
+addressSpace: 10.1.0.0/22
+ownerGroupId: 2f1c9a54-7d3e-4b8a-9c61-0e5d4a3b2c10
+costCenter: CC-2001
+budget:
+  amount: 3000
+  contacts: [payments-team@example.co.uk]
+firewallPriority: 1010
+egressFqdns:
+  - api.stripe.com
+  - "*.adyen.com"

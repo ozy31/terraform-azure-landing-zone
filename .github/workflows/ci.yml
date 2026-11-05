@@ -55,13 +55,18 @@ jobs:
         run: make tflint
 
   lint:
-    name: yamllint
+    name: yamllint + landing zone checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
 
       - name: yamllint
         run: make lint
+
+      - name: landing zone address plan and firewall priorities
+        run: |
+          python3 -m pip install --quiet pyyaml
+          make landing-zones
 
   security:
     name: trivy config scan

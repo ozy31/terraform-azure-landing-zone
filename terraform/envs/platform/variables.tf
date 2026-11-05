@@ -36,9 +36,9 @@ variable "hub_address_space" {
 }
 
 variable "spoke_supernet" {
-  description = "Range all spokes are allocated from. Platform firewall rules use it as their source."
+  description = "Range connected spokes are allocated from (hack/check-landing-zones.py keeps a copy). Platform firewall rules use it as their source."
   type        = string
-  default     = "10.0.0.0/12"
+  default     = "10.0.0.0/10"
 }
 
 variable "firewall_sku" {

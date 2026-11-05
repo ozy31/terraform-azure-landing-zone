@@ -102,6 +102,15 @@ mock_provider "azurerm" {
   }
 }
 
+mock_provider "azapi" {
+  mock_resource "azapi_resource" {
+    defaults = {
+      id     = "/subscriptions/44444444-4444-4444-4444-444444444444/resourceGroups/rg-mock/providers/Microsoft.Network/virtualNetworks/vnet-mock"
+      output = { properties = { subscriptionId = "77777777-7777-7777-7777-777777777777" } }
+    }
+  }
+}
+
 # Firewall and Bastion check the subnet name inside the subnet ID.
 override_resource {
   target = module.hub.azurerm_subnet.this["AzureFirewallSubnet"]
@@ -165,5 +174,26 @@ run "platform_logs_reach_the_central_workspace" {
   assert {
     condition     = alltrue([for a in azurerm_monitor_metric_alert.firewall : one(a.action).action_group_id == module.management.action_group_id])
     error_message = "Firewall alerts must reach the platform action group."
+  }
+}
+
+run "every_landing_zone_file_is_vended" {
+  command = apply
+
+  assert {
+    condition = toset(keys(module.landing_zone)) == toset([
+      for f in fileset("${path.module}/../../../landing-zones", "*.yaml") : trimsuffix(f, ".yaml")
+    ])
+    error_message = "Each landing-zones/<name>.yaml must produce one landing zone."
+  }
+
+  assert {
+    condition     = module.landing_zone["payments"].route_table_id != null && module.landing_zone["aks-platform"].route_table_id == null
+    error_message = "Only corp landing zones are forced through the firewall; the AKS platform is online."
+  }
+
+  assert {
+    condition     = output.landing_zones["data-sandbox"].subscription_id == "77777777-7777-7777-7777-777777777777"
+    error_message = "A landing zone with a billing scope gets a new subscription."
   }
 }

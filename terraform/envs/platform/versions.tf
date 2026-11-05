@@ -6,6 +6,10 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 5.12"
     }
+    azapi = {
+      source  = "azure/azapi"
+      version = "~> 2.5"
+    }
   }
 
   # Partial configuration: values come from backend.hcl. CI authenticates
@@ -27,4 +31,9 @@ provider "azurerm" {
   storage_use_azuread = true
 
   features {}
+}
+
+# Landing zones: azapi addresses every subscription by resource ID.
+provider "azapi" {
+  subscription_id = var.management_subscription_id
 }

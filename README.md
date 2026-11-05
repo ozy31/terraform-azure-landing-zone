@@ -74,6 +74,29 @@ vending: one module call gives a team a ready subscription.
 | 0.0.0.0/0 to the firewall | yes | no, own egress | no |
 | Firewall rule group for its FQDNs | yes | no | no |
 
+A team asks for one with a pull request adding `landing-zones/<name>.yaml`:
+
+```yaml
+archetype: corp
+subscriptionId: 44444444-4444-4444-4444-444444444444   # or billingScopeId: to create one
+addressSpace: 10.1.0.0/22
+ownerGroupId: 2f1c9a54-7d3e-4b8a-9c61-0e5d4a3b2c10    # Entra group
+costCenter: CC-2001
+budget:
+  amount: 3000
+  contacts: [payments-team@example.co.uk]
+firewallPriority: 1010
+egressFqdns: [api.stripe.com, "*.adyen.com"]
+```
+
+[`aks-platform.yaml`](landing-zones/aks-platform.yaml) is the landing zone of
+[terraform-azure-aks-platform](https://github.com/ozy31/terraform-azure-aks-platform):
+online, because its ingress has a public load balancer and its egress a NAT
+gateway with fixed IPs, and peered to the hub for private endpoints and
+on-premises. `make landing-zones` checks what Terraform cannot: connected
+address spaces inside the spoke supernet and not overlapping each other or
+the hub, and unique firewall priorities.
+
 Every landing zone also gets its activity log in the central workspace, a
 monthly budget with 80% actual and 100% forecast alerts, and the owning Entra
 group as Contributor. The subscription is either existing or created from a
@@ -135,6 +158,8 @@ terraform/
     management/         central Log Analytics workspace, platform action group (+ tests)
     landing-zone/       subscription vending with azapi: placement, spoke, peering, routes, budget (+ tests)
   envs/platform/        composition for the whole tenant (+ tests)
+landing-zones/          one YAML file per landing zone
+hack/                   cross-file checks for landing zones
 ```
 
 ## Validation
@@ -144,6 +169,7 @@ terraform/
 | `make terraform` | `fmt`, `init` and `validate` for every module and environment |
 | `make tftest` | `terraform test` with mocked providers |
 | `make tflint` | tflint with the azurerm ruleset |
+| `make landing-zones` | address overlaps and firewall priorities across `landing-zones/*.yaml` |
 | `make lint security` | yamllint, trivy |
 
 ## License
