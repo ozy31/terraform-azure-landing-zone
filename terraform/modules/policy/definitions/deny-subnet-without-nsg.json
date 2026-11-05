@@ -1,0 +1,50 @@
+{
+  "name": "deny-subnet-without-nsg",
+  "displayName": "Subnets must have a network security group",
+  "description": "Checks subnets created on their own and subnets declared inline in a virtual network. Subnets that Azure does not allow an NSG on are excluded, as are any listed in excludedSubnets.",
+  "mode": "All",
+  "parameters": {
+    "effect": {
+      "type": "String",
+      "allowedValues": ["Audit", "Deny", "Disabled"],
+      "defaultValue": "Audit"
+    },
+    "excludedSubnets": {
+      "type": "Array",
+      "defaultValue": ["GatewaySubnet", "AzureFirewallSubnet", "AzureFirewallManagementSubnet", "AzureBastionSubnet", "RouteServerSubnet"]
+    }
+  },
+  "policyRule": {
+    "if": {
+      "anyOf": [
+        {
+          "allOf": [
+            { "field": "type", "equals": "Microsoft.Network/virtualNetworks/subnets" },
+            { "field": "name", "notIn": "[parameters('excludedSubnets')]" },
+            { "field": "Microsoft.Network/virtualNetworks/subnets/networkSecurityGroup.id", "exists": "false" }
+          ]
+        },
+        {
+          "allOf": [
+            { "field": "type", "equals": "Microsoft.Network/virtualNetworks" },
+            {
+              "count": {
+                "field": "Microsoft.Network/virtualNetworks/subnets[*]",
+                "where": {
+                  "allOf": [
+                    { "field": "Microsoft.Network/virtualNetworks/subnets[*].name", "notIn": "[parameters('excludedSubnets')]" },
+                    { "field": "Microsoft.Network/virtualNetworks/subnets[*].networkSecurityGroup.id", "exists": "false" }
+                  ]
+                }
+              },
+              "greater": 0
+            }
+          ]
+        }
+      ]
+    },
+    "then": {
+      "effect": "[parameters('effect')]"
+    }
+  }
+}

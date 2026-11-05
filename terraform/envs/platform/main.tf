@@ -17,3 +17,12 @@ module "management_groups" {
     (var.identity_subscription_id)     = "identity"
   }
 }
+
+module "policy" {
+  source = "../../modules/policy"
+
+  management_group_ids = module.management_groups.ids
+  location             = var.primary_location
+  required_tags        = ["cost-center"]
+  do_not_enforce       = var.policy_do_not_enforce
+}

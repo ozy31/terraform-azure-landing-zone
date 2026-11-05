@@ -29,12 +29,32 @@ alz                     Retail
 └── alz-decommissioned
 ```
 
+## Policy
+
+Assigned to management groups, so a subscription gets its guardrails from
+where it is placed. Custom definitions are JSON files in
+[`terraform/modules/policy/definitions`](terraform/modules/policy/definitions),
+in the same shape as a portal export.
+
+| Scope | Assignment | Effect |
+|---|---|---|
+| root | Allowed locations, for resources and resource groups (UK South, UK West) | Deny |
+| root | `cost-center` tag on resource groups, inherited by resources | Deny, Modify |
+| landing-zones | Landing zone baseline initiative: subnet NSG (custom), storage HTTPS only, Key Vault deletion protection, AKS local accounts disabled | Audit, then Deny |
+| corp | No public IP addresses (custom) | Deny |
+| sandbox | No ExpressRoute, VPN, Virtual WAN or peering | Deny |
+| decommissioned | Nothing new but resource groups | Deny |
+
+New guardrails go out audit-only first: list the assignment in
+`policy_do_not_enforce`, check the compliance view, then remove it.
+
 ## Repository layout
 
 ```
 terraform/
   modules/
     management-groups/  CAF hierarchy and platform subscription placement (+ tests)
+    policy/             custom definitions (JSON), baseline initiative, assignments (+ tests)
   envs/platform/        composition for the whole tenant (+ tests)
 ```
 

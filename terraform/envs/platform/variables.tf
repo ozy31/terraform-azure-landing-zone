@@ -29,6 +29,12 @@ variable "primary_location" {
   default     = "uksouth"
 }
 
+variable "policy_do_not_enforce" {
+  description = "Policy assignments to run audit-only while they are rolled out."
+  type        = set(string)
+  default     = []
+}
+
 variable "tags" {
   description = "Tags applied to every resource."
   type        = map(string)
