@@ -52,6 +52,30 @@ mock_provider "azurerm" {
       id = "/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-alz-hub-uks/providers/Microsoft.Network/virtualNetworks/vnet-alz-hub-uks"
     }
   }
+
+  mock_resource "azurerm_private_dns_zone" {
+    defaults = {
+      id = "/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-alz-hub-uks/providers/Microsoft.Network/privateDnsZones/mock"
+    }
+  }
+
+  mock_resource "azurerm_private_dns_resolver" {
+    defaults = {
+      id = "/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-alz-hub-uks/providers/Microsoft.Network/dnsResolvers/dnspr-alz-hub-uks"
+    }
+  }
+
+  mock_resource "azurerm_private_dns_resolver_outbound_endpoint" {
+    defaults = {
+      id = "/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-alz-hub-uks/providers/Microsoft.Network/dnsResolvers/dnspr-alz-hub-uks/outboundEndpoints/out"
+    }
+  }
+
+  mock_resource "azurerm_private_dns_resolver_dns_forwarding_ruleset" {
+    defaults = {
+      id = "/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-alz-hub-uks/providers/Microsoft.Network/dnsForwardingRulesets/dnsfrs-alz-hub-uks"
+    }
+  }
 }
 
 # Firewall and Bastion check the subnet name inside the subnet ID.
@@ -93,5 +117,10 @@ run "hub_is_in_the_connectivity_subscription" {
   assert {
     condition     = startswith(module.hub.vnet_id, "/subscriptions/${var.connectivity_subscription_id}/")
     error_message = "The hub belongs to the connectivity subscription."
+  }
+
+  assert {
+    condition     = module.hub.firewall_dns_servers == tolist([module.dns.inbound_endpoint_ip])
+    error_message = "The firewall DNS proxy must forward to the resolver, or spokes cannot resolve privatelink names."
   }
 }

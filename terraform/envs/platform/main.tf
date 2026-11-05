@@ -41,5 +41,20 @@ module "hub" {
   address_space        = var.hub_address_space
   spoke_address_ranges = [var.spoke_supernet]
   firewall_sku         = var.firewall_sku
+  dns_servers          = [module.dns.inbound_endpoint_ip]
   tags                 = local.tags
+}
+
+module "dns" {
+  source    = "../../modules/private-dns"
+  providers = { azurerm = azurerm.connectivity }
+
+  name                = "alz-hub-${local.region_short[var.primary_location]}"
+  location            = var.primary_location
+  resource_group_name = module.hub.resource_group_name
+  hub_vnet_id         = module.hub.vnet_id
+  hub_vnet_name       = module.hub.vnet_name
+  hub_address_space   = var.hub_address_space
+  forwarding_rules    = var.dns_forwarding_rules
+  tags                = local.tags
 }

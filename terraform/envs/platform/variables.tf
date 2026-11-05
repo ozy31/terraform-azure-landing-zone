@@ -47,6 +47,12 @@ variable "firewall_sku" {
   default     = "Standard"
 }
 
+variable "dns_forwarding_rules" {
+  description = "On-premises domains => DNS servers, forwarded by the DNS Private Resolver."
+  type        = map(list(string))
+  default     = {}
+}
+
 variable "policy_do_not_enforce" {
   description = "Policy assignments to run audit-only while they are rolled out."
   type        = set(string)

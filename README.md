@@ -37,7 +37,11 @@ flowchart LR
         afw["Azure Firewall<br/>DNS proxy, threat intel deny"]
         bas["Bastion (Standard)"]
         gw["GatewaySubnet<br/>reserved for VPN / ExpressRoute"]
+        dnspr["DNS Private Resolver<br/>inbound 10.100.0.164"]
+        zones["privatelink zones"]
     end
+    afw -- "DNS proxy" --> dnspr --> zones
+    dnspr -- "forwarding rules" --> onprem["on-premises DNS"]
     internet(("internet"))
     afw --> internet
     admins["admins"] --> bas
@@ -48,6 +52,11 @@ flowchart LR
   zone above 1000. Threat intelligence in Deny mode; Premium adds IDPS.
 - **DNS proxy on the firewall**, so FQDN rules resolve the same addresses as the
   workloads behind it.
+- **Central DNS.** Every `privatelink` zone lives once, in the connectivity
+  subscription, linked to the hub. Spokes use the firewall as DNS server; the
+  firewall proxies to a DNS Private Resolver, which answers from those zones and
+  forwards on-premises domains. On-premises forwards Azure names to the
+  resolver's fixed inbound address.
 - **Bastion Standard** with native client tunnelling: no public IPs on VMs.
 - **GatewaySubnet** kept free, so adding VPN or ExpressRoute does not mean
   re-addressing the hub.
@@ -79,6 +88,7 @@ terraform/
     management-groups/  CAF hierarchy and platform subscription placement (+ tests)
     policy/             custom definitions (JSON), baseline initiative, assignments (+ tests)
     hub-network/        hub VNet, Azure Firewall and policy, Bastion (+ tests)
+    private-dns/        central privatelink zones, DNS Private Resolver, forwarding (+ tests)
   envs/platform/        composition for the whole tenant (+ tests)
 ```
 

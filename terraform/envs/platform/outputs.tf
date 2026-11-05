@@ -13,6 +13,16 @@ output "egress_ip" {
   value       = module.hub.firewall_public_ip
 }
 
+output "dns_resolver_ip" {
+  description = "Point on-premises conditional forwarders for Azure privatelink zones here."
+  value       = module.dns.inbound_endpoint_ip
+}
+
+output "private_dns_zone_ids" {
+  description = "Central privatelink zones, for private endpoints in any landing zone."
+  value       = module.dns.private_dns_zone_ids
+}
+
 output "policy_assignment_ids" {
   description = "Policy assignment IDs, for exemptions."
   value       = module.policy.assignment_ids

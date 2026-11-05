@@ -23,6 +23,11 @@ output "firewall_public_ip" {
   value       = azurerm_public_ip.firewall.ip_address
 }
 
+output "firewall_dns_servers" {
+  description = "Upstream servers of the firewall DNS proxy."
+  value       = azurerm_firewall_policy.this.dns[0].servers
+}
+
 output "firewall_policy_id" {
   description = "Firewall policy that landing zone rule collection groups attach to."
   value       = azurerm_firewall_policy.this.id
