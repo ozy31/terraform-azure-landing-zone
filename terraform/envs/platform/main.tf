@@ -1,4 +1,9 @@
 locals {
+  region_short = {
+    uksouth = "uks"
+    ukwest  = "ukw"
+  }
+
   tags = merge(var.tags, {
     managed-by = "terraform"
     repository = "terraform-azure-landing-zone"
@@ -25,4 +30,16 @@ module "policy" {
   location             = var.primary_location
   required_tags        = ["cost-center"]
   do_not_enforce       = var.policy_do_not_enforce
+}
+
+module "hub" {
+  source    = "../../modules/hub-network"
+  providers = { azurerm = azurerm.connectivity }
+
+  name                 = "alz-hub-${local.region_short[var.primary_location]}"
+  location             = var.primary_location
+  address_space        = var.hub_address_space
+  spoke_address_ranges = [var.spoke_supernet]
+  firewall_sku         = var.firewall_sku
+  tags                 = local.tags
 }

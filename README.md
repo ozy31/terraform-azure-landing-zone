@@ -29,6 +29,29 @@ alz                     Retail
 └── alz-decommissioned
 ```
 
+## Hub network
+
+```mermaid
+flowchart LR
+    subgraph hub["connectivity subscription: hub VNet 10.100.0.0/22"]
+        afw["Azure Firewall<br/>DNS proxy, threat intel deny"]
+        bas["Bastion (Standard)"]
+        gw["GatewaySubnet<br/>reserved for VPN / ExpressRoute"]
+    end
+    internet(("internet"))
+    afw --> internet
+    admins["admins"] --> bas
+```
+
+- **Azure Firewall** with a firewall policy: platform rules (NTP, Windows
+  Update, Azure Monitor) at priority 200, one rule collection group per landing
+  zone above 1000. Threat intelligence in Deny mode; Premium adds IDPS.
+- **DNS proxy on the firewall**, so FQDN rules resolve the same addresses as the
+  workloads behind it.
+- **Bastion Standard** with native client tunnelling: no public IPs on VMs.
+- **GatewaySubnet** kept free, so adding VPN or ExpressRoute does not mean
+  re-addressing the hub.
+
 ## Policy
 
 Assigned to management groups, so a subscription gets its guardrails from
@@ -55,6 +78,7 @@ terraform/
   modules/
     management-groups/  CAF hierarchy and platform subscription placement (+ tests)
     policy/             custom definitions (JSON), baseline initiative, assignments (+ tests)
+    hub-network/        hub VNet, Azure Firewall and policy, Bastion (+ tests)
   envs/platform/        composition for the whole tenant (+ tests)
 ```
 

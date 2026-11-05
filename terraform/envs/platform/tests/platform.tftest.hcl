@@ -26,6 +26,49 @@ mock_provider "azurerm" {
   }
 }
 
+mock_provider "azurerm" {
+  alias = "connectivity"
+
+  mock_resource "azurerm_subnet" {
+    defaults = {
+      id = "/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-alz-hub-uks/providers/Microsoft.Network/virtualNetworks/vnet-alz-hub-uks/subnets/mock"
+    }
+  }
+
+  mock_resource "azurerm_public_ip" {
+    defaults = {
+      id = "/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-alz-hub-uks/providers/Microsoft.Network/publicIPAddresses/mock"
+    }
+  }
+
+  mock_resource "azurerm_firewall_policy" {
+    defaults = {
+      id = "/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-alz-hub-uks/providers/Microsoft.Network/firewallPolicies/afwp-alz-hub-uks"
+    }
+  }
+
+  mock_resource "azurerm_virtual_network" {
+    defaults = {
+      id = "/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-alz-hub-uks/providers/Microsoft.Network/virtualNetworks/vnet-alz-hub-uks"
+    }
+  }
+}
+
+# Firewall and Bastion check the subnet name inside the subnet ID.
+override_resource {
+  target = module.hub.azurerm_subnet.this["AzureFirewallSubnet"]
+  values = {
+    id = "/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-alz-hub-uks/providers/Microsoft.Network/virtualNetworks/vnet-alz-hub-uks/subnets/AzureFirewallSubnet"
+  }
+}
+
+override_resource {
+  target = module.hub.azurerm_subnet.this["AzureBastionSubnet"]
+  values = {
+    id = "/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-alz-hub-uks/providers/Microsoft.Network/virtualNetworks/vnet-alz-hub-uks/subnets/AzureBastionSubnet"
+  }
+}
+
 run "platform_subscriptions_sit_in_platform_groups" {
   command = apply
 
@@ -41,5 +84,14 @@ run "policy_uses_this_hierarchy" {
   assert {
     condition     = module.policy.assignment_ids["corp-deny-public-ip"] != null && module.policy.custom_definition_ids["deny-public-ip"] != null
     error_message = "The corp public IP guardrail must be assigned."
+  }
+}
+
+run "hub_is_in_the_connectivity_subscription" {
+  command = apply
+
+  assert {
+    condition     = startswith(module.hub.vnet_id, "/subscriptions/${var.connectivity_subscription_id}/")
+    error_message = "The hub belongs to the connectivity subscription."
   }
 }

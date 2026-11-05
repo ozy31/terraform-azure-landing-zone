@@ -29,6 +29,24 @@ variable "primary_location" {
   default     = "uksouth"
 }
 
+variable "hub_address_space" {
+  description = "Hub VNet range (/22)."
+  type        = string
+  default     = "10.100.0.0/22"
+}
+
+variable "spoke_supernet" {
+  description = "Range all spokes are allocated from. Platform firewall rules use it as their source."
+  type        = string
+  default     = "10.0.0.0/12"
+}
+
+variable "firewall_sku" {
+  description = "Azure Firewall tier: Standard, or Premium for TLS inspection and IDPS."
+  type        = string
+  default     = "Standard"
+}
+
 variable "policy_do_not_enforce" {
   description = "Policy assignments to run audit-only while they are rolled out."
   type        = set(string)

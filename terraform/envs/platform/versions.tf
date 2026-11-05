@@ -20,3 +20,11 @@ provider "azurerm" {
 
   features {}
 }
+
+provider "azurerm" {
+  alias               = "connectivity"
+  subscription_id     = var.connectivity_subscription_id
+  storage_use_azuread = true
+
+  features {}
+}
