@@ -19,6 +19,18 @@ mock_provider "azurerm" {
     }
   }
 
+  mock_resource "azurerm_log_analytics_workspace" {
+    defaults = {
+      id = "/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-alz-mgmt-uks/providers/Microsoft.OperationalInsights/workspaces/log-alz-mgmt-uks"
+    }
+  }
+
+  mock_resource "azurerm_monitor_action_group" {
+    defaults = {
+      id = "/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-alz-mgmt-uks/providers/Microsoft.Insights/actionGroups/ag-alz-mgmt-uks-platform"
+    }
+  }
+
   mock_resource "azurerm_management_group_policy_set_definition" {
     defaults = {
       id = "/providers/Microsoft.Management/managementGroups/alz/providers/Microsoft.Authorization/policySetDefinitions/lz-baseline"
@@ -50,6 +62,18 @@ mock_provider "azurerm" {
   mock_resource "azurerm_virtual_network" {
     defaults = {
       id = "/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-alz-hub-uks/providers/Microsoft.Network/virtualNetworks/vnet-alz-hub-uks"
+    }
+  }
+
+  mock_resource "azurerm_firewall" {
+    defaults = {
+      id = "/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-alz-hub-uks/providers/Microsoft.Network/azureFirewalls/afw-alz-hub-uks"
+    }
+  }
+
+  mock_resource "azurerm_bastion_host" {
+    defaults = {
+      id = "/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-alz-hub-uks/providers/Microsoft.Network/bastionHosts/bas-alz-hub-uks"
     }
   }
 
@@ -122,5 +146,24 @@ run "hub_is_in_the_connectivity_subscription" {
   assert {
     condition     = module.hub.firewall_dns_servers == tolist([module.dns.inbound_endpoint_ip])
     error_message = "The firewall DNS proxy must forward to the resolver, or spokes cannot resolve privatelink names."
+  }
+}
+
+run "platform_logs_reach_the_central_workspace" {
+  command = apply
+
+  assert {
+    condition     = toset([for d in azurerm_monitor_diagnostic_setting.activity_log : d.target_resource_id]) == toset([for id in [var.management_subscription_id, var.connectivity_subscription_id, var.identity_subscription_id] : "/subscriptions/${id}"])
+    error_message = "Every platform subscription sends its activity log to the central workspace."
+  }
+
+  assert {
+    condition     = azurerm_monitor_diagnostic_setting.firewall.log_analytics_destination_type == "Dedicated"
+    error_message = "Firewall logs go to resource-specific AZFW* tables."
+  }
+
+  assert {
+    condition     = alltrue([for a in azurerm_monitor_metric_alert.firewall : one(a.action).action_group_id == module.management.action_group_id])
+    error_message = "Firewall alerts must reach the platform action group."
   }
 }

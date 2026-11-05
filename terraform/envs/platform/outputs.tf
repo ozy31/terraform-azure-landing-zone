@@ -23,6 +23,11 @@ output "private_dns_zone_ids" {
   value       = module.dns.private_dns_zone_ids
 }
 
+output "log_analytics_workspace_id" {
+  description = "Central platform workspace."
+  value       = module.management.log_analytics_workspace_id
+}
+
 output "policy_assignment_ids" {
   description = "Policy assignment IDs, for exemptions."
   value       = module.policy.assignment_ids

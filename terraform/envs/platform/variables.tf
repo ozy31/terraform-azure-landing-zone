@@ -53,6 +53,12 @@ variable "dns_forwarding_rules" {
   default     = {}
 }
 
+variable "platform_alert_emails" {
+  description = "Platform team addresses for platform alerts."
+  type        = list(string)
+  default     = []
+}
+
 variable "policy_do_not_enforce" {
   description = "Policy assignments to run audit-only while they are rolled out."
   type        = set(string)

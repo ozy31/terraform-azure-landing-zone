@@ -58,3 +58,12 @@ module "dns" {
   forwarding_rules    = var.dns_forwarding_rules
   tags                = local.tags
 }
+
+module "management" {
+  source = "../../modules/management"
+
+  name         = "alz-mgmt-${local.region_short[var.primary_location]}"
+  location     = var.primary_location
+  alert_emails = var.platform_alert_emails
+  tags         = local.tags
+}

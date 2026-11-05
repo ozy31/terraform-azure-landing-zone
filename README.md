@@ -61,6 +61,24 @@ flowchart LR
 - **GatewaySubnet** kept free, so adding VPN or ExpressRoute does not mean
   re-addressing the hub.
 
+## Management
+
+- One Log Analytics workspace in the management subscription for platform
+  logs: activity logs of every subscription (landing zones included, through
+  vending), firewall logs in resource-specific `AZFW*` tables, Bastion audit
+  logs. Entra auth only, resource-context access so teams can query their own
+  subscription's activity.
+- Alerts on the shared hub, because a firewall problem is an outage for every
+  corp landing zone: firewall health below 90%, SNAT port use above 80%.
+
+```kusto
+// Top denied egress destinations in the last hour
+AZFWApplicationRule
+| where TimeGenerated > ago(1h) and Action == "Deny"
+| summarize count() by SourceIp, Fqdn
+| top 20 by count_
+```
+
 ## Policy
 
 Assigned to management groups, so a subscription gets its guardrails from
@@ -89,6 +107,7 @@ terraform/
     policy/             custom definitions (JSON), baseline initiative, assignments (+ tests)
     hub-network/        hub VNet, Azure Firewall and policy, Bastion (+ tests)
     private-dns/        central privatelink zones, DNS Private Resolver, forwarding (+ tests)
+    management/         central Log Analytics workspace, platform action group (+ tests)
   envs/platform/        composition for the whole tenant (+ tests)
 ```
 

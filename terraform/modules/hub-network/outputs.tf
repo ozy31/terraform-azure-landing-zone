@@ -13,6 +13,21 @@ output "vnet_name" {
   value       = azurerm_virtual_network.this.name
 }
 
+output "firewall_id" {
+  description = "Azure Firewall ID."
+  value       = azurerm_firewall.this.id
+}
+
+output "firewall_name" {
+  description = "Azure Firewall name."
+  value       = azurerm_firewall.this.name
+}
+
+output "bastion_id" {
+  description = "Bastion host ID."
+  value       = azurerm_bastion_host.this.id
+}
+
 output "firewall_private_ip" {
   description = "Next hop for spoke default routes, and the DNS server spokes use."
   value       = azurerm_firewall.this.ip_configuration[0].private_ip_address
