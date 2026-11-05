@@ -3,6 +3,7 @@
 [![ci](https://github.com/ozy31/terraform-azure-landing-zone/actions/workflows/ci.yml/badge.svg)](https://github.com/ozy31/terraform-azure-landing-zone/actions/workflows/ci.yml)
 ![Terraform](https://img.shields.io/badge/terraform-%3E%3D1.9-7B42BC?logo=terraform)
 ![azurerm](https://img.shields.io/badge/azurerm-v5-0078D4?logo=microsoftazure)
+![azapi](https://img.shields.io/badge/azapi-v2-0078D4?logo=microsoftazure)
 ![License: MIT](https://img.shields.io/badge/license-MIT-blue)
 
 An Azure landing zone in Terraform, following the Cloud Adoption Framework:
@@ -45,6 +46,8 @@ flowchart LR
     internet(("internet"))
     afw --> internet
     admins["admins"] --> bas
+    corp["corp spoke: payments"] -- "0.0.0.0/0 and DNS" --> afw
+    online["online spoke: aks-platform"] -. "peering, DNS only" .-> afw
 ```
 
 - **Azure Firewall** with a firewall policy: platform rules (NTP, Windows
@@ -146,6 +149,16 @@ in the same shape as a portal export.
 New guardrails go out audit-only first: list the assignment in
 `policy_do_not_enforce`, check the compliance view, then remove it.
 
+## Design decisions
+
+| ADR | Decision |
+|---|---|
+| [0001](docs/adr/0001-policy-by-management-group.md) | CAF management groups; policy assigned to groups only, rolled out audit-first |
+| [0002](docs/adr/0002-hub-and-spoke-with-azure-firewall.md) | Hub and spoke with Azure Firewall, not Virtual WAN (yet) |
+| [0003](docs/adr/0003-central-private-dns.md) | One copy of each privatelink zone, resolved through the firewall DNS proxy |
+| [0004](docs/adr/0004-subscription-vending-with-azapi.md) | Subscription vending with azapi and one YAML file per landing zone |
+| [0005](docs/adr/0005-corp-and-online-archetypes.md) | Corp (forced tunnel, no public IPs) and online (own ingress and egress) |
+
 ## Repository layout
 
 ```
@@ -160,7 +173,28 @@ terraform/
   envs/platform/        composition for the whole tenant (+ tests)
 landing-zones/          one YAML file per landing zone
 hack/                   cross-file checks for landing zones
+docs/adr/               architecture decision records
+docs/runbooks/          landing zone onboarding and decommissioning, policy roll-out
 ```
+
+## Deploying
+
+1. Create the platform subscriptions (management, connectivity, identity) and a
+   state storage account in the management subscription (Entra auth only).
+2. Federate two Entra applications with this repository (plan: pull requests,
+   Reader on the tenant root group; apply: the `platform` environment, Owner on
+   the `alz` group once it exists, Management Group Contributor at the tenant
+   root to create it).
+3. Fill in `terraform/envs/platform/terraform.tfvars` and `backend.hcl`, set the
+   repository variables `AZURE_TENANT_ID`, `AZURE_CLIENT_ID_PLAN` and
+   `AZURE_CLIENT_ID_APPLY`, and merge. The
+   [`terraform` workflow](.github/workflows/terraform.yml) plans on pull
+   requests and applies on `main` after approval.
+4. Point on-premises conditional forwarders for `privatelink.*` at the
+   `dns_resolver_ip` output, and give partners the `egress_ip` output.
+
+Runbooks: [onboarding a landing zone](docs/runbooks/landing-zone-onboarding.md),
+[rolling out a guardrail](docs/runbooks/policy-rollout.md).
 
 ## Validation
 

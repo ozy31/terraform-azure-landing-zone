@@ -21,7 +21,7 @@ for path in sorted((ROOT / "landing-zones").glob("*.yaml")):
     name = path.stem
     lz = yaml.safe_load(path.read_text())
     net = ipaddress.ip_network(lz["addressSpace"])
-    if lz["archetype"] == "sandbox":
+    if lz["archetype"] not in ("corp", "online"):
         continue
     if not net.subnet_of(SUPERNET):
         errors.append(f"{name}: {net} is outside the spoke supernet {SUPERNET}")

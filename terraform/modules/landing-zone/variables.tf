@@ -9,12 +9,12 @@ variable "name" {
 }
 
 variable "archetype" {
-  description = "corp: private, egress through the hub firewall. online: internet-facing, peered but with its own egress. sandbox: not connected."
+  description = "corp: private, egress through the hub firewall. online: internet-facing, peered but with its own egress. sandbox: not connected. decommissioned: disconnected, nothing new allowed."
   type        = string
 
   validation {
-    condition     = contains(["corp", "online", "sandbox"], var.archetype)
-    error_message = "archetype must be corp, online or sandbox."
+    condition     = contains(["corp", "online", "sandbox", "decommissioned"], var.archetype)
+    error_message = "archetype must be corp, online, sandbox or decommissioned."
   }
 }
 

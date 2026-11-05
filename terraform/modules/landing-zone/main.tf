@@ -15,7 +15,7 @@
 # so a new landing zone does not need a new provider block.
 
 locals {
-  connected = var.archetype != "sandbox"
+  connected = contains(["corp", "online"], var.archetype)
   corp      = var.archetype == "corp"
 
   subscription_id = var.subscription.id != null ? var.subscription.id : azapi_resource.alias[0].output.properties.subscriptionId

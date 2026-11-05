@@ -124,6 +124,20 @@ run "sandbox_is_isolated" {
   }
 }
 
+run "decommissioning_disconnects" {
+  command = apply
+
+  variables {
+    archetype           = "decommissioned"
+    management_group_id = "/providers/Microsoft.Management/managementGroups/alz-decommissioned"
+  }
+
+  assert {
+    condition     = length(azapi_resource.peering_from_hub) == 0 && length(azapi_resource.route_table) == 0 && length(azapi_resource.egress_rules) == 0
+    error_message = "A decommissioned landing zone loses its hub peering and firewall rules."
+  }
+}
+
 run "vended_subscription" {
   command = apply
 
